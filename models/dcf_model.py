@@ -114,7 +114,8 @@ class FCFEDCFModel:
             # Step 7: Calculate per-share value
             shares_outstanding = financial_data.get('shares_outstanding')
             if not shares_outstanding or shares_outstanding <= 0:
-                result['error'] = "Invalid shares outstanding"
+                result['error'] = f"Invalid shares outstanding (value: {shares_outstanding}). Unable to calculate per-share fair value."
+                logger.error(f"Shares outstanding issue - received: {shares_outstanding}")
                 return result
             
             fair_value = self.calculator.calculate_per_share_value(

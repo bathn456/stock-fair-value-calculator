@@ -60,9 +60,44 @@ class YahooFinanceDataSource:
         return None
     
     def get_shares_outstanding(self) -> Optional[float]:
-        """Get shares outstanding"""
-        if self.info:
-            return self.info.get('sharesOutstanding')
+        """
+        Get shares outstanding with multiple fallback methods
+        Tries: info dict -> balance sheet -> market cap calculation
+        """
+        # Try 1: Get from info dict
+        if self.info and isinstance(self.info, dict):
+            shares = self.info.get('sharesOutstanding')
+            if shares and shares > 0:
+                logger.info(f"Shares outstanding from info: {shares:,.0f}")
+                return shares
+        
+        # Try 2: Get from balance sheet (some tickers have it there)
+        try:
+            if self.stock and hasattr(self.stock, 'balance_sheet'):
+                bs = self.stock.balance_sheet
+                if bs is not None and not bs.empty:
+                    latest_bs = bs.iloc[:, 0]
+                    shares = latest_bs.get('Ordinary Shares Number') or latest_bs.get('Share Issued')
+                    if shares and shares > 0:
+                        logger.info(f"Shares outstanding from balance sheet: {shares:,.0f}")
+                        return shares
+        except Exception as e:
+            logger.warning(f"Could not get shares from balance sheet: {e}")
+        
+        # Try 3: Calculate from market cap and price
+        try:
+            if self.info and isinstance(self.info, dict):
+                market_cap = self.info.get('marketCap')
+                price = self.info.get('currentPrice') or self.info.get('regularMarketPrice')
+                
+                if market_cap and price and price > 0:
+                    shares = market_cap / price
+                    logger.info(f"Shares outstanding calculated from market cap: {shares:,.0f}")
+                    return shares
+        except Exception as e:
+            logger.warning(f"Could not calculate shares from market cap: {e}")
+        
+        logger.error("Could not determine shares outstanding from any source")
         return None
     
     def get_sector(self) -> str:
