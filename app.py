@@ -107,7 +107,7 @@ def run_analysis(ticker, custom_growth, custom_discount, custom_terminal):
     with col3:
         st.metric("Beta", f"{financial_data.get('beta', 0):.2f}")
     with col4:
-        st.metric("Sector", yahoo_source.info.get('sector', 'N/A'))
+        st.metric("Sector", yahoo_source.get_sector())
 
     # Prepare assumptions
     risk_free_rate = yahoo_source.get_risk_free_rate()

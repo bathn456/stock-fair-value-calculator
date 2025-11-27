@@ -4,6 +4,7 @@ Yahoo Finance data source for FCFE DCF calculation
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import requests
 from typing import Dict, Optional
 from utils.helpers import get_logger, handle_errors
 
@@ -63,6 +64,12 @@ class YahooFinanceDataSource:
         if self.info:
             return self.info.get('sharesOutstanding')
         return None
+    
+    def get_sector(self) -> str:
+        """Get company sector safely"""
+        if self.info and isinstance(self.info, dict):
+            return self.info.get('sector', 'N/A')
+        return 'N/A'
     
     @handle_errors
     def get_financial_data(self) -> Dict:
